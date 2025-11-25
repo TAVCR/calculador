@@ -1,106 +1,369 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Estrategia Comercial 2026 - Simulador</title>
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
-.container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-header { text-align: center; margin-bottom: 40px; border-bottom: 3px solid #667eea; padding-bottom: 20px; }
-header h1 { color: #333; font-size: 2em; margin-bottom: 10px; }
-header p { color: #666; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-.form-group { display: flex; flex-direction: column; }
-label { font-weight: bold; margin-bottom: 5px; color: #333; }
-input, select { padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em; }
-input:focus, select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 5px rgba(102,126,234,0.3); }
-button { background: #667eea; color: white; padding: 12px 30px; border: none; border-radius: 5px; font-size: 1em; font-weight: bold; cursor: pointer; width: 100%; transition: background 0.3s; }
-button:hover { background: #764ba2; }
-.results { background: #f8f9fa; padding: 20px; border-radius: 5px; margin-top: 30px; display: none; }
-.results.show { display: block; }
-.result-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd; }
-.result-value { font-weight: bold; color: #667eea; }
-@media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estrategia Comercial 2026 - Simulador Por Evento</title>
+    <style>
+        /* --- CORE STYLES --- */
+        :root {
+            --bg: #080808;
+            --panel: #111111;
+            --gold: #D4AF37;
+            --red: #e74c3c;
+            --green: #2ecc71;
+            --blue: #3498db;
+            --text: #ecf0f1;
+            --muted: #7f8c8d;
+            --purple: #9b59b6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3 { line-height: 1.2; text-transform: uppercase; letter-spacing: 1px; }
+        
+        h1 { 
+            font-size: clamp(2rem, 4vw, 3rem); 
+            background: linear-gradient(to right, #fff, #999);
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .highlight { color: var(--gold); font-weight: 800; }
+        .text-red { color: var(--red); }
+        .text-green { color: var(--green); }
+        .text-blue { color: var(--blue); }
+        .text-muted { color: var(--muted); }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* --- ROLE CARDS --- */
+        .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .role-card {
+            background: var(--panel);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .role-title { font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        .role-metric { font-size: 0.9rem; color: var(--muted); margin-top: 5px; }
+        
+        /* --- SIMULATOR --- */
+        .simulator-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .simulator-box {
+            background: #151515;
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid #333;
+            text-align: center;
+        }
+
+        .simulator-box.base { border-top: 4px solid var(--blue); }
+        .simulator-box.prem { border-top: 4px solid var(--gold); }
+
+        .control-group {
+            margin: 20px 0;
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .control-label {
+            font-size: 0.8rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--gold);
+            margin: 10px 0;
+            cursor: pointer;
+        }
+
+        .value-display { font-size: 1.5rem; font-weight: bold; color: #fff; }
+        .price-display { font-size: 1.2rem; font-weight: bold; color: var(--gold); }
+        .cost-display { font-size: 1.2rem; font-weight: bold; color: var(--red); }
+        .fee-display { font-size: 1.2rem; font-weight: bold; color: var(--purple); }
+        .cost-detail { font-size: 0.75rem; color: var(--muted); margin-top: 5px; }
+
+        .result-card {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .money-value { font-size: 1.5rem; font-weight: bold; margin: 5px 0; }
+        .label { font-size: 0.8rem; text-transform: uppercase; color: var(--muted); }
+
+        .breakeven-indicator {
+            margin-top: 10px;
+            font-size: 0.8rem;
+            padding: 5px;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .breakeven-indicator.safe { color: var(--green); background: rgba(46, 204, 113, 0.1); }
+        .breakeven-indicator.danger { color: var(--red); background: rgba(231, 76, 60, 0.1); }
+
+        @media (max-width: 700px) {
+            .simulator-container { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
-<div class="container">
-<header>
-<h1>Calculadora de Ganancias</h1>
-<p>Estrategia Comercial 2026 - Simulador por Evento</p>
-</header>
-<form id="calcForm">
-<div class="form-row">
-<div class="form-group">
-<label for="eventos">Numero de Eventos:</label>
-<input type="number" id="eventos" min="1" value="1" required>
-</div>
-<div class="form-group">
-<label for="personas">Personas por Evento:</label>
-<input type="number" id="personas" min="1" value="50" required>
-</div>
-</div>
-<div class="form-row">
-<div class="form-group">
-<label for="precio">Precio por Persona ($):</label>
-<input type="number" id="precio" step="0.01" min="0" value="100" required>
-</div>
-<div class="form-group">
-<label for="gastos">Gastos Totales ($):</label>
-<input type="number" id="gastos" step="0.01" min="0" value="0" required>
-</div>
-</div>
-<div class="form-row">
-<div class="form-group">
-<label for="descuento">Descuento (%):</label>
-<input type="number" id="descuento" step="0.01" min="0" max="100" value="0">
-</div>
-<div class="form-group">
-<label for="margen">Margen de Ganancia (%):</label>
-<input type="number" id="margen" step="0.01" min="0" value="20">
-</div>
-</div>
-<button type="submit">Calcular Ganancias</button>
-</form>
-<div id="results" class="results">
-<div class="result-item"><span>Total de Asistentes:</span><span class="result-value" id="asistentes">-</span></div>
-<div class="result-item"><span>Ingresos Brutos:</span><span class="result-value" id="ingresos">-</span></div>
-<div class="result-item"><span>Descuentos:</span><span class="result-value" id="descuentoTotal">-</span></div>
-<div class="result-item"><span>Ingresos Netos:</span><span class="result-value" id="netos">-</span></div>
-<div class="result-item"><span>Gastos:</span><span class="result-value" id="gastosDisplay">-</span></div>
-<div class="result-item"><span>Ganancia Base:</span><span class="result-value" id="base">-</span></div>
-<div class="result-item"><span>Margen Agregado:</span><span class="result-value" id="margenAgregado">-</span></div>
-<div class="result-item" style="background: #e8f4f8; padding: 15px; border-radius: 5px; margin-top: 10px;"><span style="font-weight: bold; font-size: 1.1em;">GANANCIA TOTAL:</span><span class="result-value" style="color: #27ae60; font-size: 1.3em;" id="total">-</span></div>
-</div>
-</div>
-<script>
-document.getElementById('calcForm').addEventListener('submit', function(e) {
-e.preventDefault();
-const eventos = parseFloat(document.getElementById('eventos').value) || 0;
-const personas = parseFloat(document.getElementById('personas').value) || 0;
-const precio = parseFloat(document.getElementById('precio').value) || 0;
-const gastos = parseFloat(document.getElementById('gastos').value) || 0;
-const descuento = parseFloat(document.getElementById('descuento').value) || 0;
-const margen = parseFloat(document.getElementById('margen').value) || 0;
-const totalAsistentes = eventos * personas;
-const ingresosBrutos = totalAsistentes * precio;
-const descuentoAplicado = (ingresosBrutos * descuento) / 100;
-const ingresosNetos = ingresosBrutos - descuentoAplicado;
-const gananciaBase = ingresosNetos - gastos;
-const margenAplicado = (gananciaBase * margen) / 100;
-const gananciaTotal = gananciaBase + margenAplicado;
-document.getElementById('asistentes').textContent = totalAsistentes.toLocaleString('es-ES');
-document.getElementById('ingresos').textContent = '$' + ingresosBrutos.toFixed(2);
-document.getElementById('descuentoTotal').textContent = '$' + descuentoAplicado.toFixed(2);
-document.getElementById('netos').textContent = '$' + ingresosNetos.toFixed(2);
-document.getElementById('gastosDisplay').textContent = '$' + gastos.toFixed(2);
-document.getElementById('base').textContent = '$' + gananciaBase.toFixed(2);
-document.getElementById('margenAgregado').textContent = '$' + margenAplicado.toFixed(2);
-document.getElementById('total').textContent = '$' + gananciaTotal.toFixed(2);
-document.getElementById('results').classList.add('show');
-});
-</script>
+
+    <div class="container">
+        <h1>SIMULADOR <span class="highlight">POR EVENTO</span></h1>
+        <p style="text-align: center; color: var(--muted); margin-bottom: 40px;">Todo Variable: Costos, Precios, Asistencia y Fee Agente</p>
+
+        <!-- ROLES -->
+        <div class="roles-grid">
+            <div class="role-card" style="border-top: 3px solid var(--muted);">
+                <div class="role-title">RESTAURANTE <span>🍔</span></div>
+                <div class="role-metric">Aporte: Local + Sonido</div>
+                <div class="role-metric">Costo: ₡0</div>
+                <div class="role-metric" style="color: var(--green);">Gana: 100% Comidas/Bebidas</div>
+            </div>
+            <div class="role-card" style="border-top: 3px solid var(--blue);">
+                <div class="role-title">PRODUCTOR <span>🎸</span></div>
+                <div class="role-metric">Aporte: Bandas + Ads</div>
+                <div class="role-metric">Costo: Variable + ₡20k</div>
+                <div class="role-metric" style="color: var(--blue);">Gana: Ticket - Fee</div>
+            </div>
+            <div class="role-card" style="border-top: 3px solid var(--gold);">
+                <div class="role-title">AGENTE (DISEÑO) <span>🎨</span></div>
+                <div class="role-metric">Aporte: Promoción</div>
+                <div class="role-metric">Costo: Tiempo</div>
+                <div class="role-metric" style="color: var(--gold);">Gana: Fee Configurable</div>
+            </div>
+        </div>
+
+        <!-- SIMULADORES -->
+        <div class="simulator-container">
+            
+            <!-- COLUMNA VIERNES -->
+            <div class="simulator-box base">
+                <h3 style="color: var(--blue);">VIERNES (Base)</h3>
+                
+                <!-- FEE AGENTE VIERNES -->
+                <div class="control-group" style="border: 1px solid var(--purple);">
+                    <span class="control-label" style="color: var(--purple);">Fee Agente (x Entrada)</span>
+                    <input type="range" id="feeBase" min="300" max="1500" step="50" value="700" oninput="updateCalc()">
+                    <div class="fee-display" id="feeDisplayBase">₡700</div>
+                </div>
+
+                <!-- COSTO VIERNES -->
+                <div class="control-group" style="border: 1px solid var(--red);">
+                    <span class="control-label" style="color: var(--red);">Costo Banda</span>
+                    <input type="range" id="costBase" min="50000" max="300000" step="5000" value="185000" oninput="updateCalc()">
+                    <div class="cost-display" id="costDisplayBase">₡185,000</div>
+                    <div class="cost-detail">+ ₡20,000 Ads (Meta) = Costo Total: <span id="totalCostBase" style="font-weight:bold; color:#fff;">₡205,000</span></div>
+                </div>
+                
+                <!-- PRECIO VIERNES -->
+                <div class="control-group">
+                    <span class="control-label">Precio Entrada</span>
+                    <input type="range" id="priceBase" min="2000" max="8000" step="500" value="5000" oninput="updateCalc()">
+                    <div class="price-display" id="priceDisplayBase">₡5,000</div>
+                </div>
+
+                <!-- ASISTENCIA VIERNES -->
+                <div class="control-group">
+                    <span class="control-label">Asistencia</span>
+                    <input type="range" id="paxSliderBase" min="0" max="200" value="45" oninput="updateCalc()">
+                    <div class="value-display"><span id="paxDisplayBase">45</span> <span style="font-size: 1rem; color: #aaa;">pax</span></div>
+                </div>
+
+                <div class="result-card">
+                    <div class="label">Utilidad Productor</div>
+                    <div class="money-value" id="baseProdResult">₡0</div>
+                    <div id="baseIndicator" class="breakeven-indicator">Calculando...</div>
+                    
+                    <hr style="border-color: #333; margin: 10px 0;">
+                    
+                    <div class="label">Fee Agente</div>
+                    <div class="money-value" style="color: var(--gold); font-size: 1.2rem;" id="baseAgentResult">₡0</div>
+                </div>
+            </div>
+
+            <!-- COLUMNA SÁBADO -->
+            <div class="simulator-box prem">
+                <h3 style="color: var(--gold);">SÁBADO (Premium)</h3>
+                
+                <!-- FEE AGENTE SÁBADO -->
+                <div class="control-group" style="border: 1px solid var(--purple);">
+                    <span class="control-label" style="color: var(--purple);">Fee Agente (x Entrada)</span>
+                    <input type="range" id="feePrem" min="300" max="2000" step="50" value="1000" oninput="updateCalc()">
+                    <div class="fee-display" id="feeDisplayPrem">₡1,000</div>
+                </div>
+
+                <!-- COSTO SÁBADO -->
+                <div class="control-group" style="border: 1px solid var(--red);">
+                    <span class="control-label" style="color: var(--red);">Costo Banda</span>
+                    <input type="range" id="costPrem" min="150000" max="600000" step="10000" value="350000" oninput="updateCalc()">
+                    <div class="cost-display" id="costDisplayPrem">₡350,000</div>
+                    <div class="cost-detail">+ ₡20,000 Ads (Meta) = Costo Total: <span id="totalCostPrem" style="font-weight:bold; color:#fff;">₡370,000</span></div>
+                </div>
+                
+                <!-- PRECIO SÁBADO -->
+                <div class="control-group">
+                    <span class="control-label">Precio Entrada</span>
+                    <input type="range" id="pricePrem" min="4000" max="15000" step="500" value="8000" oninput="updateCalc()">
+                    <div class="price-display" id="priceDisplayPrem">₡8,000</div>
+                </div>
+
+                <!-- ASISTENCIA SÁBADO -->
+                <div class="control-group">
+                    <span class="control-label">Asistencia</span>
+                    <input type="range" id="paxSliderPrem" min="0" max="200" value="80" oninput="updateCalc()">
+                    <div class="value-display"><span id="paxDisplayPrem">80</span> <span style="font-size: 1rem; color: #aaa;">pax</span></div>
+                </div>
+
+                <div class="result-card">
+                    <div class="label">Utilidad Productor</div>
+                    <div class="money-value" id="premProdResult">₡0</div>
+                    <div id="premIndicator" class="breakeven-indicator">Calculando...</div>
+                    
+                    <hr style="border-color: #333; margin: 10px 0;">
+                    
+                    <div class="label">Fee Agente</div>
+                    <div class="money-value" style="color: var(--gold); font-size: 1.2rem;" id="premAgentResult">₡0</div>
+                </div>
+            </div>
+
+        </div>
+
+        <div style="text-align: center; margin-top: 30px; font-size: 0.9rem; color: var(--muted);">
+            *Los cálculos incluyen la inversión publicitaria obligatoria de ₡20,000 por evento a cargo del productor.
+        </div>
+
+    </div>
+
+    <script>
+        const AD_SPEND = 20000;
+
+        function formatMoney(amount) {
+            return "₡" + amount.toLocaleString('es-CR');
+        }
+
+        function updateCalc() {
+            // Get Dynamic Independent Fees
+            const feeBase = parseInt(document.getElementById('feeBase').value);
+            const feePrem = parseInt(document.getElementById('feePrem').value);
+
+            // Display Fees
+            document.getElementById('feeDisplayBase').innerText = formatMoney(feeBase);
+            document.getElementById('feeDisplayPrem').innerText = formatMoney(feePrem);
+
+            // Get Dynamic Costs (Band Only)
+            const costBaseBand = parseInt(document.getElementById('costBase').value);
+            const costPremBand = parseInt(document.getElementById('costPrem').value);
+
+            // Calculate Total Costs (Band + Ads)
+            const totalCostBase = costBaseBand + AD_SPEND;
+            const totalCostPrem = costPremBand + AD_SPEND;
+
+            // Display Costs
+            document.getElementById('costDisplayBase').innerText = formatMoney(costBaseBand);
+            document.getElementById('totalCostBase').innerText = formatMoney(totalCostBase);
+            
+            document.getElementById('costDisplayPrem').innerText = formatMoney(costPremBand);
+            document.getElementById('totalCostPrem').innerText = formatMoney(totalCostPrem);
+
+
+            // Get Other Values
+            const paxBase = parseInt(document.getElementById('paxSliderBase').value);
+            const priceBase = parseInt(document.getElementById('priceBase').value);
+            
+            const paxPrem = parseInt(document.getElementById('paxSliderPrem').value);
+            const pricePrem = parseInt(document.getElementById('pricePrem').value);
+            
+            // Update Displays
+            document.getElementById('paxDisplayBase').innerText = paxBase;
+            document.getElementById('priceDisplayBase').innerText = formatMoney(priceBase);
+            
+            document.getElementById('paxDisplayPrem').innerText = paxPrem;
+            document.getElementById('priceDisplayPrem').innerText = formatMoney(pricePrem);
+
+            // --- VIERNES (BASE) ---
+            const netTicketBase = priceBase - feeBase;
+            const baseProdRev = paxBase * netTicketBase;
+            const baseProdProfit = baseProdRev - totalCostBase; // Revenue - (Band + Ads)
+            const baseAgentProfit = paxBase * feeBase;
+
+            const elBaseResult = document.getElementById('baseProdResult');
+            elBaseResult.innerText = formatMoney(baseProdProfit);
+            elBaseResult.style.color = baseProdProfit < 0 ? 'var(--red)' : 'var(--green)';
+            
+            const elBaseInd = document.getElementById('baseIndicator');
+            if(baseProdProfit < 0) {
+                const needed = Math.ceil(totalCostBase / netTicketBase);
+                elBaseInd.className = "breakeven-indicator danger";
+                elBaseInd.innerText = "Faltan " + (needed - paxBase) + " pax (Meta: " + needed + ")";
+            } else {
+                elBaseInd.className = "breakeven-indicator safe";
+                elBaseInd.innerText = "Cubierto (+ ₡" + baseProdProfit.toLocaleString() + ")";
+            }
+            document.getElementById('baseAgentResult').innerText = formatMoney(baseAgentProfit);
+
+            // --- SÁBADO (PREMIUM) ---
+            const netTicketPrem = pricePrem - feePrem;
+            const premProdRev = paxPrem * netTicketPrem;
+            const premProdProfit = premProdRev - totalCostPrem; // Revenue - (Band + Ads)
+            const premAgentProfit = paxPrem * feePrem;
+
+            const elPremResult = document.getElementById('premProdResult');
+            elPremResult.innerText = formatMoney(premProdProfit);
+            elPremResult.style.color = premProdProfit < 0 ? 'var(--red)' : 'var(--green)';
+
+            const elPremInd = document.getElementById('premIndicator');
+            if(premProdProfit < 0) {
+                const neededPrem = Math.ceil(totalCostPrem / netTicketPrem);
+                elPremInd.className = "breakeven-indicator danger";
+                elPremInd.innerText = "Faltan " + (neededPrem - paxPrem) + " pax (Meta: " + neededPrem + ")";
+            } else {
+                elPremInd.className = "breakeven-indicator safe";
+                elPremInd.innerText = "Cubierto (+ ₡" + premProdProfit.toLocaleString() + ")";
+            }
+            document.getElementById('premAgentResult').innerText = formatMoney(premAgentProfit);
+        }
+
+        updateCalc();
+    </script>
+
 </body>
 </html>
