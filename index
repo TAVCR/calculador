@@ -84,10 +84,18 @@
             border-radius: 15px;
             border: 1px solid #333;
             text-align: center;
+            transition: all 0.3s ease;
         }
 
         .simulator-box.base { border-top: 4px solid var(--blue); }
         .simulator-box.prem { border-top: 4px solid var(--gold); }
+
+        /* Estado Desactivado */
+        .simulator-box.disabled {
+            opacity: 0.4;
+            pointer-events: none; /* Evita clicks */
+            filter: grayscale(100%);
+        }
 
         .control-group {
             margin: 20px 0;
@@ -138,6 +146,54 @@
         }
         .breakeven-indicator.safe { color: var(--green); background: rgba(46, 204, 113, 0.1); }
         .breakeven-indicator.danger { color: var(--red); background: rgba(231, 76, 60, 0.1); }
+        .breakeven-indicator.inactive { color: var(--muted); background: rgba(255, 255, 255, 0.1); }
+
+        /* --- TOGGLE SWITCH --- */
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 15px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #333;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: var(--green); }
+        input:focus + .slider { box-shadow: 0 0 1px var(--green); }
+        input:checked + .slider:before { transform: translateX(26px); }
 
         @media (max-width: 700px) {
             .simulator-container { grid-template-columns: 1fr; }
@@ -148,7 +204,7 @@
 
     <div class="container">
         <h1>SIMULADOR <span class="highlight">POR EVENTO</span></h1>
-        <p style="text-align: center; color: var(--muted); margin-bottom: 40px;">Todo Variable: Costos, Precios, Asistencia y Fee Agente</p>
+        <p style="text-align: center; color: var(--muted); margin-bottom: 40px;">Todo Variable + Selector de Días</p>
 
         <!-- ROLES -->
         <div class="roles-grid">
@@ -176,8 +232,14 @@
         <div class="simulator-container">
             
             <!-- COLUMNA VIERNES -->
-            <div class="simulator-box base">
-                <h3 style="color: var(--blue);">VIERNES (Base)</h3>
+            <div class="simulator-box base" id="boxBase">
+                <div class="header-row">
+                    <h3 style="color: var(--blue); margin:0;">VIERNES</h3>
+                    <label class="switch">
+                        <input type="checkbox" id="checkBase" checked onchange="updateCalc()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
                 
                 <!-- FEE AGENTE VIERNES -->
                 <div class="control-group" style="border: 1px solid var(--purple);">
@@ -221,8 +283,14 @@
             </div>
 
             <!-- COLUMNA SÁBADO -->
-            <div class="simulator-box prem">
-                <h3 style="color: var(--gold);">SÁBADO (Premium)</h3>
+            <div class="simulator-box prem" id="boxPrem">
+                <div class="header-row">
+                    <h3 style="color: var(--gold); margin:0;">SÁBADO</h3>
+                    <label class="switch">
+                        <input type="checkbox" id="checkPrem" checked onchange="updateCalc()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
                 
                 <!-- FEE AGENTE SÁBADO -->
                 <div class="control-group" style="border: 1px solid var(--purple);">
@@ -281,85 +349,131 @@
         }
 
         function updateCalc() {
-            // Get Dynamic Independent Fees
-            const feeBase = parseInt(document.getElementById('feeBase').value);
-            const feePrem = parseInt(document.getElementById('feePrem').value);
+            // --- GESTIÓN DE ESTADO (ACTIVAR/DESACTIVAR) ---
+            const isBaseActive = document.getElementById('checkBase').checked;
+            const isPremActive = document.getElementById('checkPrem').checked;
 
-            // Display Fees
-            document.getElementById('feeDisplayBase').innerText = formatMoney(feeBase);
-            document.getElementById('feeDisplayPrem').innerText = formatMoney(feePrem);
-
-            // Get Dynamic Costs (Band Only)
-            const costBaseBand = parseInt(document.getElementById('costBase').value);
-            const costPremBand = parseInt(document.getElementById('costPrem').value);
-
-            // Calculate Total Costs (Band + Ads)
-            const totalCostBase = costBaseBand + AD_SPEND;
-            const totalCostPrem = costPremBand + AD_SPEND;
-
-            // Display Costs
-            document.getElementById('costDisplayBase').innerText = formatMoney(costBaseBand);
-            document.getElementById('totalCostBase').innerText = formatMoney(totalCostBase);
-            
-            document.getElementById('costDisplayPrem').innerText = formatMoney(costPremBand);
-            document.getElementById('totalCostPrem').innerText = formatMoney(totalCostPrem);
-
-
-            // Get Other Values
-            const paxBase = parseInt(document.getElementById('paxSliderBase').value);
-            const priceBase = parseInt(document.getElementById('priceBase').value);
-            
-            const paxPrem = parseInt(document.getElementById('paxSliderPrem').value);
-            const pricePrem = parseInt(document.getElementById('pricePrem').value);
-            
-            // Update Displays
-            document.getElementById('paxDisplayBase').innerText = paxBase;
-            document.getElementById('priceDisplayBase').innerText = formatMoney(priceBase);
-            
-            document.getElementById('paxDisplayPrem').innerText = paxPrem;
-            document.getElementById('priceDisplayPrem').innerText = formatMoney(pricePrem);
+            const boxBase = document.getElementById('boxBase');
+            const boxPrem = document.getElementById('boxPrem');
 
             // --- VIERNES (BASE) ---
-            const netTicketBase = priceBase - feeBase;
-            const baseProdRev = paxBase * netTicketBase;
-            const baseProdProfit = baseProdRev - totalCostBase; // Revenue - (Band + Ads)
-            const baseAgentProfit = paxBase * feeBase;
+            if (isBaseActive) {
+                boxBase.classList.remove('disabled');
+                
+                // Get Specific Fees
+                const feeBase = parseInt(document.getElementById('feeBase').value);
+                document.getElementById('feeDisplayBase').innerText = formatMoney(feeBase);
 
-            const elBaseResult = document.getElementById('baseProdResult');
-            elBaseResult.innerText = formatMoney(baseProdProfit);
-            elBaseResult.style.color = baseProdProfit < 0 ? 'var(--red)' : 'var(--green)';
-            
-            const elBaseInd = document.getElementById('baseIndicator');
-            if(baseProdProfit < 0) {
-                const needed = Math.ceil(totalCostBase / netTicketBase);
-                elBaseInd.className = "breakeven-indicator danger";
-                elBaseInd.innerText = "Faltan " + (needed - paxBase) + " pax (Meta: " + needed + ")";
+                // Get Dynamic Costs (Band Only)
+                const costBaseBand = parseInt(document.getElementById('costBase').value);
+                const totalCostBase = costBaseBand + AD_SPEND;
+
+                // Display Costs
+                document.getElementById('costDisplayBase').innerText = formatMoney(costBaseBand);
+                document.getElementById('totalCostBase').innerText = formatMoney(totalCostBase);
+
+                // Get Other Values
+                const paxBase = parseInt(document.getElementById('paxSliderBase').value);
+                const priceBase = parseInt(document.getElementById('priceBase').value);
+                
+                // Update Displays
+                document.getElementById('paxDisplayBase').innerText = paxBase;
+                document.getElementById('priceDisplayBase').innerText = formatMoney(priceBase);
+
+                // Calculations
+                const netTicketBase = priceBase - feeBase;
+                const baseProdRev = paxBase * netTicketBase;
+                const baseProdProfit = baseProdRev - totalCostBase; 
+                const baseAgentProfit = paxBase * feeBase;
+
+                const elBaseResult = document.getElementById('baseProdResult');
+                elBaseResult.innerText = formatMoney(baseProdProfit);
+                elBaseResult.style.color = baseProdProfit < 0 ? 'var(--red)' : 'var(--green)';
+                
+                const elBaseInd = document.getElementById('baseIndicator');
+                if(baseProdProfit < 0) {
+                    const needed = netTicketBase > 0 ? Math.ceil(totalCostBase / netTicketBase) : 0;
+                    if(needed > 0) {
+                        elBaseInd.className = "breakeven-indicator danger";
+                        elBaseInd.innerText = "Faltan " + (needed - paxBase) + " pax (Meta: " + needed + ")";
+                    } else {
+                        elBaseInd.className = "breakeven-indicator danger";
+                        elBaseInd.innerText = "Precio Insuficiente";
+                    }
+                } else {
+                    elBaseInd.className = "breakeven-indicator safe";
+                    elBaseInd.innerText = "Cubierto (+ ₡" + baseProdProfit.toLocaleString() + ")";
+                }
+                document.getElementById('baseAgentResult').innerText = formatMoney(baseAgentProfit);
+
             } else {
-                elBaseInd.className = "breakeven-indicator safe";
-                elBaseInd.innerText = "Cubierto (+ ₡" + baseProdProfit.toLocaleString() + ")";
+                boxBase.classList.add('disabled');
+                document.getElementById('baseProdResult').innerText = "Inactivo";
+                document.getElementById('baseProdResult').style.color = "var(--muted)";
+                document.getElementById('baseIndicator').className = "breakeven-indicator inactive";
+                document.getElementById('baseIndicator').innerText = "--";
+                document.getElementById('baseAgentResult').innerText = "Inactivo";
             }
-            document.getElementById('baseAgentResult').innerText = formatMoney(baseAgentProfit);
+
 
             // --- SÁBADO (PREMIUM) ---
-            const netTicketPrem = pricePrem - feePrem;
-            const premProdRev = paxPrem * netTicketPrem;
-            const premProdProfit = premProdRev - totalCostPrem; // Revenue - (Band + Ads)
-            const premAgentProfit = paxPrem * feePrem;
+            if (isPremActive) {
+                boxPrem.classList.remove('disabled');
 
-            const elPremResult = document.getElementById('premProdResult');
-            elPremResult.innerText = formatMoney(premProdProfit);
-            elPremResult.style.color = premProdProfit < 0 ? 'var(--red)' : 'var(--green)';
+                // Get Specific Fees
+                const feePrem = parseInt(document.getElementById('feePrem').value);
+                document.getElementById('feeDisplayPrem').innerText = formatMoney(feePrem);
 
-            const elPremInd = document.getElementById('premIndicator');
-            if(premProdProfit < 0) {
-                const neededPrem = Math.ceil(totalCostPrem / netTicketPrem);
-                elPremInd.className = "breakeven-indicator danger";
-                elPremInd.innerText = "Faltan " + (neededPrem - paxPrem) + " pax (Meta: " + neededPrem + ")";
+                // Get Dynamic Costs (Band Only)
+                const costPremBand = parseInt(document.getElementById('costPrem').value);
+                const totalCostPrem = costPremBand + AD_SPEND;
+
+                // Display Costs
+                document.getElementById('costDisplayPrem').innerText = formatMoney(costPremBand);
+                document.getElementById('totalCostPrem').innerText = formatMoney(totalCostPrem);
+
+                // Get Other Values
+                const paxPrem = parseInt(document.getElementById('paxSliderPrem').value);
+                const pricePrem = parseInt(document.getElementById('pricePrem').value);
+                
+                // Update Displays
+                document.getElementById('paxDisplayPrem').innerText = paxPrem;
+                document.getElementById('priceDisplayPrem').innerText = formatMoney(pricePrem);
+
+                // Calculations
+                const netTicketPrem = pricePrem - feePrem;
+                const premProdRev = paxPrem * netTicketPrem;
+                const premProdProfit = premProdRev - totalCostPrem; 
+                const premAgentProfit = paxPrem * feePrem;
+
+                const elPremResult = document.getElementById('premProdResult');
+                elPremResult.innerText = formatMoney(premProdProfit);
+                elPremResult.style.color = premProdProfit < 0 ? 'var(--red)' : 'var(--green)';
+
+                const elPremInd = document.getElementById('premIndicator');
+                if(premProdProfit < 0) {
+                    const neededPrem = netTicketPrem > 0 ? Math.ceil(totalCostPrem / netTicketPrem) : 0;
+                    if(neededPrem > 0) {
+                        elPremInd.className = "breakeven-indicator danger";
+                        elPremInd.innerText = "Faltan " + (neededPrem - paxPrem) + " pax (Meta: " + neededPrem + ")";
+                    } else {
+                        elPremInd.className = "breakeven-indicator danger";
+                        elPremInd.innerText = "Precio Insuficiente";
+                    }
+                } else {
+                    elPremInd.className = "breakeven-indicator safe";
+                    elPremInd.innerText = "Cubierto (+ ₡" + premProdProfit.toLocaleString() + ")";
+                }
+                document.getElementById('premAgentResult').innerText = formatMoney(premAgentProfit);
+
             } else {
-                elPremInd.className = "breakeven-indicator safe";
-                elPremInd.innerText = "Cubierto (+ ₡" + premProdProfit.toLocaleString() + ")";
+                boxPrem.classList.add('disabled');
+                document.getElementById('premProdResult').innerText = "Inactivo";
+                document.getElementById('premProdResult').style.color = "var(--muted)";
+                document.getElementById('premIndicator').className = "breakeven-indicator inactive";
+                document.getElementById('premIndicator').innerText = "--";
+                document.getElementById('premAgentResult').innerText = "Inactivo";
             }
-            document.getElementById('premAgentResult').innerText = formatMoney(premAgentProfit);
         }
 
         updateCalc();
