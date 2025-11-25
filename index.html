@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estrategia Comercial 2026 - Simulador Por Evento</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        header p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: bold;
+        }
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        input[type="number"]:focus,
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        .results {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 30px;
+            display: none;
+        }
+        .results.show {
+            display: block;
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        .result-label {
+            font-weight: bold;
+            color: #333;
+        }
+        .result-value {
+            font-size: 1.1em;
+            color: #667eea;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Calculadora de Ganancias</h1>
+            <p>Estrategia Comercial 2026 - Simulador por Evento</p>
+        </header>
+        <div class="content">
+            <form id="calcForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="eventos">Numero de Eventos:</label>
+                        <input type="number" id="eventos" name="eventos" min="1" value="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="personasEvento">Personas por Evento:</label>
+                        <input type="number" id="personasEvento" name="personasEvento" min="1" value="50" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="precioPersona">Precio por Persona ($):</label>
+                        <input type="number" id="precioPersona" name="precioPersona" step="0.01" min="0" value="100" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gastos">Gastos Totales ($):</label>
+                        <input type="number" id="gastos" name="gastos" step="0.01" min="0" value="0" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="descuentoPorcentaje">Descuento (%):</label>
+                        <input type="number" id="descuentoPorcentaje" name="descuentoPorcentaje" step="0.01" min="0" max="100" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="margenGanancia">Margen de Ganancia (%):</label>
+                        <input type="number" id="margenGanancia" name="margenGanancia" step="0.01" min="0" value="20">
+                    </div>
+                </div>
+                <button type="submit">Calcular Ganancias</button>
+            </form>
+            <div id="results" class="results">
+                <div class="result-item">
+                    <span class="result-label">Total de Asistentes:</span>
+                    <span class="result-value" id="totalAsistentes">-</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Ingresos Brutos:</span>
+                    <span class="result-value" id="ingresosBrutos">-</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Descuentos Aplicados:</span>
+                    <span class="result-value" id="descuentosAplicados">-</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Ingresos Netos:</span>
+                    <span class="result-value" id="ingresosNetos">-</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Gastos Totales:</span>
+                    <span class="result-value" id="gastosTotales">-</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Ganancia Base:</span>
+                    <span class="result-value" id="gananciaBase">-</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Margen Agregado:</span>
+                    <span class="result-value" id="margenAgregado">-</span>
+                </div>
+                <div class="result-item" style="background: #e8f4f8; padding: 15px; border-radius: 5px; margin-top: 10px;">
+                    <span class="result-label">GANANCIA TOTAL:</span>
+                    <span class="result-value" id="gananciaTotal" style="font-size: 1.3em; color: #27ae60;">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.getElementById('calcForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            calcularGanancias();
+        });
+        function calcularGanancias() {
+            const eventos = parseFloat(document.getElementById('eventos').value) || 0;
+            const personasEvento = parseFloat(document.getElementById('personasEvento').value) || 0;
+            const precioPersona = parseFloat(document.getElementById('precioPersona').value) || 0;
+            const gastos = parseFloat(document.getElementById('gastos').value) || 0;
+            const descuentoPorcentaje = parseFloat(document.getElementById('descuentoPorcentaje').value) || 0;
+            const margenGanancia = parseFloat(document.getElementById('margenGanancia').value) || 0;
+            const totalAsistentes = eventos * personasEvento;
+            const ingresosBrutos = totalAsistentes * precioPersona;
+            const descuentosAplicados = (ingresosBrutos * descuentoPorcentaje) / 100;
+            const ingresosNetos = ingresosBrutos - descuentosAplicados;
+            const gananciaBase = ingresosNetos - gastos;
+            const margenAgregado = (gananciaBase * margenGanancia) / 100;
+            const gananciaTotal = gananciaBase + margenAgregado;
+            document.getElementById('totalAsistentes').textContent = totalAsistentes.toLocaleString('es-ES');
+            document.getElementById('ingresosBrutos').textContent = '$' + ingresosBrutos.toFixed(2);
+            document.getElementById('descuentosAplicados').textContent = '$' + descuentosAplicados.toFixed(2);
+            document.getElementById('ingresosNetos').textContent = '$' + ingresosNetos.toFixed(2);
+            document.getElementById('gastosTotales').textContent = '$' + gastos.toFixed(2);
+            document.getElementById('gananciaBase').textContent = '$' + gananciaBase.toFixed(2);
+            document.getElementById('margenAgregado').textContent = '$' + margenAgregado.toFixed(2);
+            document.getElementById('gananciaTotal').textContent = '$' + gananciaTotal.toFixed(2);
+            document.getElementById('results').classList.add('show');
+        }
+    </script>
+</body>
+</html>
